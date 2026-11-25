@@ -21,6 +21,8 @@ import auditRoutes from './routes/auditRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import verifyRoutes from './routes/verifyRoutes.js';
 
+import User from './models/User.js';
+
 const __filename = fileURLToPath(import.meta.url || 'file://' + __filename);
 const __dirname = path.dirname(__filename);
 
@@ -40,11 +42,42 @@ const index = path.join(frontend, 'index.html');
 const hasFrontend = fs.existsSync(index);
 app.set('trust proxy', env.TRUST_PROXY_HOPS);
 
-// Connect to Database
-const databaseReady = connectDB().catch((err) => {
-  console.error('[DATABASE INIT ERROR]', err);
-  process.exit(1);
-});
+// Connect to Database and ensure Administrator account exists
+const databaseReady = connectDB()
+  .then(async () => {
+    try {
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@securemed.io').toLowerCase().trim();
+      const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword123!';
+      const adminName = process.env.ADMIN_NAME || 'System Administrator';
+
+      let adminUser = await User.findOne({ email: adminEmail });
+      if (!adminUser) {
+        const anyAdmin = await User.findOne({ role: 'admin' });
+        if (!anyAdmin) {
+          await User.create({
+            name: adminName,
+            email: adminEmail,
+            password: adminPassword,
+            role: 'admin',
+            status: 'active',
+            isEmailVerified: true,
+          });
+          console.log(`[BOOTSTRAP] Initialized default administrator: ${adminEmail}`);
+        }
+      } else if (adminUser.role !== 'admin') {
+        adminUser.role = 'admin';
+        adminUser.status = 'active';
+        await adminUser.save();
+        console.log(`[BOOTSTRAP] Promoted existing user ${adminEmail} to administrator.`);
+      }
+    } catch (err) {
+      console.error('[BOOTSTRAP ADMIN WARNING]', err.message);
+    }
+  })
+  .catch((err) => {
+    console.error('[DATABASE INIT ERROR]', err);
+    process.exit(1);
+  });
 
 // Security Middlewares
 app.use(

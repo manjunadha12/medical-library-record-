@@ -1102,18 +1102,34 @@ export const googleLogin = async (req, res, next) => {
       if (!user.avatar && payload.picture) {
         user.avatar = payload.picture;
       }
+
+      // Check if user qualifies as Admin
+      const adminEmails = (process.env.ADMIN_EMAIL || 'admin@securemed.io')
+        .toLowerCase()
+        .split(',')
+        .map((e) => e.trim());
+      if (adminEmails.includes(email) && user.role !== 'admin') {
+        user.role = 'admin';
+      }
+
       user.lastLoginAt = new Date();
       await user.save();
     } else {
-      // Create new patient account with Google authentication
+      const adminEmails = (process.env.ADMIN_EMAIL || 'admin@securemed.io')
+        .toLowerCase()
+        .split(',')
+        .map((e) => e.trim());
+      const isAdminEmail = adminEmails.includes(email);
+
+      // Create new account with Google authentication
       user = await User.create({
         name: payload.name || email.split('@')[0],
         email,
-        patientId: `PAT-${Math.floor(1000 + Math.random() * 9000)}`,
+        patientId: isAdminEmail ? null : `PAT-${Math.floor(1000 + Math.random() * 9000)}`,
         authProvider: 'google',
         googleId: payload.sub,
         avatar: payload.picture || '',
-        role: 'patient',
+        role: isAdminEmail ? 'admin' : 'patient',
         isEmailVerified: payload.email_verified === 'true' || payload.email_verified === true,
         status: 'active',
         lastLoginAt: new Date(),
