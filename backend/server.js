@@ -27,7 +27,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = env.PORT;
 const CLIENT_URL = env.CLIENT_URL;
-const allowedOrigins = CLIENT_URL.split(',').map((url) => url.trim());
+const allowedOrigins = Array.from(
+  new Set([
+    ...CLIENT_URL.split(',').map((url) => url.trim()),
+    'https://medical-library-record.web.app',
+    'https://medical-library-record.firebaseapp.com',
+  ])
+);
 const production = env.NODE_ENV === 'production';
 const frontend = path.resolve(__dirname, '../frontend/dist');
 const index = path.join(frontend, 'index.html');
