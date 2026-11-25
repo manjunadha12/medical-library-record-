@@ -70,23 +70,35 @@ app.use(
 // Prevent NoSQL query injection
 app.use(mongoSanitize());
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  // Local development
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  // Firebase Hosting domains (*.web.app, *.firebaseapp.com)
+  if (/\.web\.app$/.test(origin) || /\.firebaseapp\.com$/.test(origin)) return true;
+  // Railway internal & public domains
+  if (/\.railway\.app$/.test(origin)) return true;
+  // Explicitly configured origins
+  return allowedOrigins.some((allowed) => {
+    try {
+      return new URL(allowed).origin === new URL(origin).origin;
+    } catch {
+      return allowed === origin;
+    }
+  });
+};
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, Postman, server-to-server)
-      if (!origin) return callback(null, true);
-      // In development or if explicitly allowed, permit origin
-      if (
-        allowedOrigins.includes(origin) ||
-        (env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))
-      ) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`CORS error: Origin '${origin}' is not permitted.`));
+      return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
