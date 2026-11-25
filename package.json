@@ -1,0 +1,39 @@
+{
+  "name": "securemed-share",
+  "version": "1.0.0",
+  "description": "Innovative Privacy-Preserving Medical Record Sharing System with AES-256-GCM Envelope Encryption, SHA-256 Integrity, Digital Signatures, and Consent-Based Access Control",
+  "main": "backend/server.js",
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "install:backend": "npm --prefix backend install",
+    "install:frontend": "npm --prefix frontend install",
+    "dev": "npx concurrently \"npm run backend:dev\" \"npm run frontend\"",
+    "backend": "npm --prefix backend start",
+    "backend:dev": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "firebase:deploy": "npm --prefix frontend run build && firebase deploy",
+    "firebase:deploy:hosting": "npm --prefix frontend run build && firebase deploy --only hosting",
+    "firebase:deploy:functions": "firebase deploy --only functions",
+    "server": "npm --prefix backend start",
+    "client": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run seed",
+    "create-admin": "npm --prefix backend run create-admin",
+    "test": "npm --prefix backend test",
+    "test:e2e": "npm --prefix backend run test:e2e",
+    "setup": "node backend/scripts/setup.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "keywords": [
+    "healthcare",
+    "cryptography",
+    "aes-256-gcm",
+    "digital-signatures",
+    "consent-management",
+    "privacy-preserving"
+  ],
+  "author": "SecureMed Share Team",
+  "license": "MIT"
+}

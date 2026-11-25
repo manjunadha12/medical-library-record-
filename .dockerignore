@@ -1,0 +1,7 @@
+**/node_modules
+**/dist
+**/.env*
+**/.git
+backend/uploads
+backend/keys_store
+backend/tests
