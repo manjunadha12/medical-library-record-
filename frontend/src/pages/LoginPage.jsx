@@ -25,7 +25,7 @@ import { Modal } from '../components/common/Modal';
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
 
 export const LoginPage = () => {
-  const { user, login, loginWithOtp, registerPatientWithOtp, sendOtp } = useAuth();
+  const { user, login, loginWithOtp, loginWithGoogle, registerPatientWithOtp, sendOtp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -180,10 +180,35 @@ export const LoginPage = () => {
 
   const handleConfirmSwitchDevice = async () => {
     if (!pendingCredentials) return;
-    if (pendingCredentials.type === 'password') {
-      await handlePasswordSubmit(null, true);
-    } else if (pendingCredentials.type === 'otp') {
-      await handleVerifyLoginOtp(null, true);
+    try {
+      let loggedUser = null;
+      if (pendingCredentials.type === 'password') {
+        setPasswordLoading(true);
+        loggedUser = await login(pendingCredentials.email, pendingCredentials.password, true);
+      } else if (pendingCredentials.type === 'otp') {
+        setOtpLoading(true);
+        loggedUser = await loginWithOtp(pendingCredentials.email, pendingCredentials.otp, true);
+      } else if (pendingCredentials.type === 'google') {
+        setPasswordLoading(true);
+        loggedUser = await loginWithGoogle(pendingCredentials.credential, true);
+      }
+
+      if (loggedUser) {
+        setActiveSessionConflict(null);
+        setPendingCredentials(null);
+        redirectAfterLogin(loggedUser);
+      }
+    } catch (err) {
+      if (pendingCredentials.type === 'otp') {
+        setOtpError(err.message || 'Failed to switch device. Please try again.');
+      } else {
+        setPasswordError(err.message || 'Failed to switch device. Please try again.');
+      }
+      setActiveSessionConflict(null);
+      setPendingCredentials(null);
+    } finally {
+      setPasswordLoading(false);
+      setOtpLoading(false);
     }
   };
 
@@ -606,6 +631,10 @@ export const LoginPage = () => {
                     message: err.message,
                     activeDevice: err.activeDevice,
                   });
+                  setPendingCredentials({
+                    type: 'google',
+                    credential: err.credential,
+                  });
                 }
               }}
             />
@@ -993,9 +1022,9 @@ export const LoginPage = () => {
               type="button"
               onClick={handleConfirmSwitchDevice}
               disabled={passwordLoading || otpLoading}
-              className="px-5 py-2.5 rounded-xl bg-[#114B3E] hover:bg-[#0c362d] text-white font-semibold shadow-sm transition flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-[#114B3E] hover:bg-[#0c362d] text-white font-semibold shadow-sm transition flex items-center gap-1.5 disabled:opacity-60"
             >
-              <span>Switch to This Device</span>
+              <span>{passwordLoading || otpLoading ? 'Switching...' : 'Switch to This Device'}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>

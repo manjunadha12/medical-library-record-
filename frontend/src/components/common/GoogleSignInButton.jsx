@@ -81,6 +81,7 @@ export const GoogleSignInButton = ({ onSuccess, onError, text = 'signin_with' })
               const user = await loginWithGoogle(response.credential);
               if (onSuccess) onSuccess(user);
             } catch (err) {
+              err.credential = response.credential;
               setErrorMessage(err.message || 'Google authentication failed.');
               if (onError) onError(err);
             }

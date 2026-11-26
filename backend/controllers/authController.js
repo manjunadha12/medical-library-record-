@@ -863,9 +863,6 @@ export const verifyLoginOtp = async (req, res, next) => {
       });
     }
 
-    // OTP is valid - consume it
-    await EmailOtp.deleteOne({ _id: otpRecord._id });
-
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({
@@ -906,6 +903,9 @@ export const verifyLoginOtp = async (req, res, next) => {
         });
       }
     }
+
+    // OTP is valid and session check passed (or forced switch) - consume it
+    await EmailOtp.deleteOne({ _id: otpRecord._id });
 
     // Mark email as verified since they verified through email OTP
     if (!user.isEmailVerified) {
