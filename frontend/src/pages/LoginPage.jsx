@@ -133,6 +133,9 @@ export const LoginPage = () => {
       const res = await sendOtp(otpEmail.trim(), 'login');
       setOtpSent(true);
       setCountdown(60);
+      if (res?.devOtp) {
+        setOtpCode(res.devOtp);
+      }
       setOtpSuccess(res?.message || 'Verification code sent to your email.');
     } catch (err) {
       setOtpError(err.message || 'Failed to send OTP code. Please check your email address.');
@@ -264,6 +267,9 @@ export const LoginPage = () => {
       const res = await sendOtp(regEmail.trim(), 'register_patient');
       setRegOtpSent(true);
       setRegCountdown(60);
+      if (res?.devOtp) {
+        setRegOtp(res.devOtp);
+      }
       setRegSuccess(res?.message || '6-digit OTP code sent to your email.');
     } catch (err) {
       setRegError(err.message || 'Failed to send OTP code.');

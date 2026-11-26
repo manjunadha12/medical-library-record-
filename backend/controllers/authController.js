@@ -812,9 +812,14 @@ export const sendOtp = async (req, res, next) => {
 
     await sendOtpEmail(normalizedEmail, rawOtp, purpose);
 
+    const isSmtpConfigured = Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
+
     res.status(200).json({
       success: true,
-      message: `A 6-digit OTP passcode has been sent to ${normalizedEmail}. Please check your email inbox.`,
+      message: isSmtpConfigured
+        ? `A 6-digit OTP passcode has been sent to ${normalizedEmail}. Please check your email inbox.`
+        : `[Demo Mode] Verification OTP is ${rawOtp} (SMTP credentials not yet configured)`,
+      devOtp: isSmtpConfigured ? undefined : rawOtp,
     });
   } catch (err) {
     next(err);

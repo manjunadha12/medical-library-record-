@@ -107,6 +107,9 @@ export const PatientRegistrationPage = () => {
       const res = await sendOtp(formData.email.trim(), 'register_patient');
       setOtpSent(true);
       setCountdown(60);
+      if (res?.devOtp) {
+        setFormData((prev) => ({ ...prev, otp: res.devOtp }));
+      }
       setSuccess(res?.message || 'A 6-digit verification code was sent to your email.');
     } catch (err) {
       setError(err.message || 'Failed to dispatch verification code. Please check your email.');
